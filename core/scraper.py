@@ -12,6 +12,19 @@ from tqdm import tqdm
 import time
 import re
 import json
+import sys
+import io
+
+# Safe print: tranh loi charmap tren Windows khi chay trong uvicorn (khong co TTY)
+def _safe_print(*args, **kwargs):
+    try:
+        print(*args, **kwargs)
+    except (UnicodeEncodeError, OSError):
+        try:
+            text = " ".join(str(a) for a in args)
+            sys.stdout.buffer.write((text + "\n").encode("utf-8", errors="replace"))
+        except Exception:
+            pass  # Han che toi da, khong de server crash vi print()
 
 
 @dataclass
@@ -380,7 +393,7 @@ class MultiLevelScraper:
         # ========== TRÍCH XUẤT ẢNH TRƯỚC KHI XÓA TAGS ==========
         images = self._extract_images(soup, url)
         if images:
-            print(f"      🖼️ Tìm thấy {len(images)} ảnh trong trang")
+            _safe_print(f"       Tim thay {len(images)} anh trong trang")
         
         # Loại bỏ script, style, nav, footer
         for tag in soup(['script', 'style', 'nav', 'footer', 'header', 'aside', 'noscript']):
@@ -619,10 +632,10 @@ class MultiLevelScraper:
             )
             response.raise_for_status()
             
-            # Chặn cross-domain redirect
+            # Chan cross-domain redirect
             final_domain = urlparse(response.url).netloc
             if final_domain and final_domain != self.domain:
-                print(f"  [SKIP] Cross-domain redirect: {url} → {response.url}")
+                _safe_print(f"  [SKIP] Cross-domain redirect: {url} -> {response.url}")
                 return None
             
             # Chỉ xử lý HTML
@@ -637,7 +650,7 @@ class MultiLevelScraper:
             return response.text
             
         except requests.RequestException as e:
-            print(f"  [ERROR] Không thể fetch {url}: {str(e)}")
+            _safe_print(f"  [ERROR] Khong the fetch {url}: {str(e)}")
             with self._failed_lock:
                 self.failed_urls.append(url)
             return None
@@ -649,13 +662,13 @@ class MultiLevelScraper:
         Returns:
             List[PageContent]: Danh sách nội dung các trang đã cào
         """
-        print(f"\n{'='*60}")
-        print(f"🕷️  BẮT ĐẦU CÀO ĐA TẦNG (MULTI-THREADED)")
-        print(f"{'='*60}")
-        print(f"🌐 URL gốc: {self.base_url}")
-        print(f"📊 Max depth: {self.config.max_depth}")
-        print(f"📄 Max pages: {self.config.max_pages}")
-        print(f"{'='*60}\n")
+        _safe_print("\n" + "="*60)
+        _safe_print("  BAT DAU CAO DA TANG (MULTI-THREADED)")
+        _safe_print("="*60)
+        _safe_print(f" URL goc: {self.base_url}")
+        _safe_print(f" Max depth: {self.config.max_depth}")
+        _safe_print(f" Max pages: {self.config.max_pages}")
+        _safe_print("="*60 + "\n")
         
         # Concurrency Control
         from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -678,14 +691,16 @@ class MultiLevelScraper:
         
         max_threads = 10 # Số luồng tối đa
         
-        with tqdm(total=self.config.max_pages, desc="Đang cào (Threads)", unit="trang") as pbar:
+        is_tty = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
+        with tqdm(total=self.config.max_pages, desc="Scraping", unit="page",
+                  ascii=True, disable=not is_tty) as pbar:
             while current_layer and total_processed < self.config.max_pages:
                 
                 # Chỉ lấy đủ số lượng cần thiết
                 if total_processed + len(current_layer) > self.config.max_pages:
                     current_layer = current_layer[:self.config.max_pages - total_processed]
                 
-                print(f"\n--- Đang xử lý lớp có {len(current_layer)} pages ---")
+                _safe_print(f"\n--- Processing layer: {len(current_layer)} pages ---")
                 
                 next_layer_candidates = [] # URL tìm thấy cho lớp tiếp theo
                 
@@ -707,13 +722,13 @@ class MultiLevelScraper:
                                     pbar.update(1)
                                     
                                     # Hiển thị log ngắn gọn
-                                    print(f"  ✓ [Depth {depth}] Xong: {url[:60]}... ({len(new_links)} links)")
+                                    _safe_print(f"   [D{depth}] OK: {url[:60]} ({len(new_links)} links)")
 
                                 # Gom link mới
                                 next_layer_candidates.extend([(link, depth + 1) for link in new_links])
                                 
                         except Exception as e:
-                            print(f"  ❌ Lỗi thread {url}: {e}")
+                            _safe_print(f"   [ERR] thread {url}: {e}")
                 
                 # Chuẩn bị cho lớp tiếp theo
                 current_layer = []
@@ -735,12 +750,12 @@ class MultiLevelScraper:
                 time.sleep(1)
 
         # Summary
-        print(f"\n{'='*60}")
-        print(f"✅ HOÀN THÀNH CÀO")
-        print(f"{'='*60}")
-        print(f"📄 Số trang đã cào: {len(self.pages)}")
-        print(f"❌ Số trang thất bại: {len(self.failed_urls)}")
-        print(f"{'='*60}\n")
+        _safe_print("\n" + "="*60)
+        _safe_print(" DONE SCRAPING")
+        _safe_print("="*60)
+        _safe_print(f" Pages crawled: {len(self.pages)}")
+        _safe_print(f" Pages failed:  {len(self.failed_urls)}")
+        _safe_print("="*60 + "\n")
         
         return self.pages
 
@@ -806,7 +821,7 @@ class MultiLevelScraper:
         """Lưu kết quả ra file JSON"""
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(self.to_json())
-        print(f"💾 Đã lưu kết quả vào: {filepath}")
+        print(f" Đã lưu kết quả vào: {filepath}")
 
 
 # ============================================================
@@ -867,7 +882,7 @@ class SitemapScraper(MultiLevelScraper):
             # Kiểm tra xem có phải sitemap index không
             sitemap_tags = soup.find_all('sitemap')
             if sitemap_tags:
-                print(f"  📁 Sitemap index, tìm thấy {len(sitemap_tags)} sitemap con")
+                print(f"   Sitemap index, tìm thấy {len(sitemap_tags)} sitemap con")
                 for sitemap in sitemap_tags:
                     loc = sitemap.find('loc')
                     if loc:
@@ -923,10 +938,10 @@ class SitemapScraper(MultiLevelScraper):
                         'source_sitemap': sitemap_url.split('/')[-1],
                     })
                 
-                print(f"  📄 Tìm thấy {len(entries)} URLs trong {sitemap_url.split('/')[-1]} (base P={inferred_priority})")
+                print(f"   Tìm thấy {len(entries)} URLs trong {sitemap_url.split('/')[-1]} (base P={inferred_priority})")
                 
         except Exception as e:
-            print(f"  ❌ Lỗi đọc sitemap {sitemap_url}: {e}")
+            print(f"   Lỗi đọc sitemap {sitemap_url}: {e}")
         
         # Sort theo priority giảm dần (trang sản phẩm lên đầu, danh mục xuống cuối)
         entries.sort(key=lambda x: -x['priority'])
@@ -948,12 +963,12 @@ class SitemapScraper(MultiLevelScraper):
         for path in possible_paths:
             sitemap_url = self.base_url + path
             try:
-                print(f"  🔍 Đang thử: {sitemap_url}")
+                print(f"   Đang thử: {sitemap_url}")
                 # Dùng GET thay vì HEAD vì một số server không hỗ trợ HEAD
                 response = self.session.get(sitemap_url, timeout=15)
                 print(f"     → Status: {response.status_code}")
                 if response.status_code == 200 and ('<?xml' in response.text[:100] or '<urlset' in response.text[:500] or '<sitemapindex' in response.text[:500]):
-                    print(f"  ✅ Tìm thấy sitemap: {sitemap_url}")
+                    print(f"   Tìm thấy sitemap: {sitemap_url}")
                     return sitemap_url
             except Exception as e:
                 print(f"     → Lỗi: {e}")
@@ -967,7 +982,7 @@ class SitemapScraper(MultiLevelScraper):
                 for line in response.text.split('\n'):
                     if line.lower().startswith('sitemap:'):
                         sitemap_url = line.split(':', 1)[1].strip()
-                        print(f"  ✅ Tìm thấy sitemap từ robots.txt: {sitemap_url}")
+                        print(f"   Tìm thấy sitemap từ robots.txt: {sitemap_url}")
                         return sitemap_url
         except:
             pass
@@ -977,22 +992,22 @@ class SitemapScraper(MultiLevelScraper):
     def crawl(self) -> List[PageContent]:
         """Cào theo sitemap — ưu tiên trang chủ + trang priority cao."""
         print(f"\n{'='*60}")
-        print(f"🗺️  SITEMAP SCRAPER")
+        print(f"  SITEMAP SCRAPER")
         print(f"{'='*60}")
-        print(f"🌐 Website: {self.base_url}")
+        print(f" Website: {self.base_url}")
         
         # Tìm sitemap
         sitemap_url = self._find_sitemap_url()
         
         if not sitemap_url:
-            print("  ⚠️ Không tìm thấy sitemap, chuyển sang cào thường...")
+            print("   Không tìm thấy sitemap, chuyển sang cào thường...")
             return super().crawl()
         
         # Lấy URLs từ sitemap (đã sort theo priority)
         sitemap_entries = self._fetch_sitemap(sitemap_url)
         
         if not sitemap_entries:
-            print("  ⚠️ Sitemap rỗng, chuyển sang cào thường...")
+            print("   Sitemap rỗng, chuyển sang cào thường...")
             return super().crawl()
         
         # ===== ĐẢM BẢO HOMEPAGE NẰM ĐẦU TIÊN =====
@@ -1018,14 +1033,14 @@ class SitemapScraper(MultiLevelScraper):
         # Nếu homepage không có trong sitemap → tạo entry giả với priority cao nhất
         if not homepage_entry:
             homepage_entry = {'url': self.base_url, 'priority': 1.0, 'lastmod': ''}
-            print(f"  🏠 Homepage không có trong sitemap → thêm thủ công")
+            print(f"   Homepage không có trong sitemap → thêm thủ công")
         
         # Homepage luôn đầu tiên + phần còn lại theo priority giảm dần
         ordered_entries = [homepage_entry] + other_entries
         
         # Log ưu tiên
         top5 = ordered_entries[:5]
-        print(f"  📊 Top 5 trang ưu tiên:")
+        print(f"   Top 5 trang ưu tiên:")
         for i, e in enumerate(top5):
             print(f"     {i+1}. [P={e['priority']:.1f}] {e['url'][:70]}")
         
@@ -1034,7 +1049,7 @@ class SitemapScraper(MultiLevelScraper):
         # Backward compatibility: lưu sitemap_urls dạng list[str]
         self.sitemap_urls = urls_to_crawl
         
-        print(f"📄 Sẽ cào {len(urls_to_crawl)} trang (homepage first, sorted by priority)")
+        print(f" Sẽ cào {len(urls_to_crawl)} trang (homepage first, sorted by priority)")
         print(f"{'='*60}\n")
         
         # Cào song song
@@ -1055,9 +1070,9 @@ class SitemapScraper(MultiLevelScraper):
                             self.pages.append(page_content)
                             pbar.update(1)
                     except Exception as e:
-                        print(f"  ❌ Lỗi {url}: {e}")
+                        print(f"   Lỗi {url}: {e}")
         
-        print(f"\n✅ Đã cào {len(self.pages)} trang từ sitemap (homepage + priority order)")
+        print(f"\n Đã cào {len(self.pages)} trang từ sitemap (homepage + priority order)")
         return self.pages
 
 
@@ -1122,12 +1137,12 @@ class PlaywrightScraper(MultiLevelScraper):
         from tqdm import tqdm
         
         print(f"\n{'='*60}")
-        print(f"🎭 PLAYWRIGHT SCRAPER (Single-Thread BFS)")
+        print(f" PLAYWRIGHT SCRAPER (Single-Thread BFS)")
         print(f"{'='*60}")
-        print(f"🌐 URL gốc: {self.base_url}")
-        print(f"📊 Max depth: {self.config.max_depth}")
-        print(f"📄 Max pages: {self.config.max_pages}")
-        print(f"⚠️  Chế độ tuần tự (Playwright không hỗ trợ multi-thread)")
+        print(f" URL gốc: {self.base_url}")
+        print(f" Max depth: {self.config.max_depth}")
+        print(f" Max pages: {self.config.max_pages}")
+        print(f"  Chế độ tuần tự (Playwright không hỗ trợ multi-thread)")
         print(f"{'='*60}\n")
         
         try:
@@ -1154,7 +1169,7 @@ class PlaywrightScraper(MultiLevelScraper):
                         total_processed += 1
                         pbar.update(1)
                         
-                        print(f"  ✓ [Depth {depth}] {url[:60]}...")
+                        print(f"   [Depth {depth}] {url[:60]}...")
                         
                         # Extract links cho layer tiếp
                         if depth < self.config.max_depth:
@@ -1175,7 +1190,7 @@ class PlaywrightScraper(MultiLevelScraper):
                     if total_processed >= self.config.max_pages:
                         break
             
-            print(f"\n✅ Playwright crawl xong: {len(self.pages)} trang")
+            print(f"\n Playwright crawl xong: {len(self.pages)} trang")
             return self.pages
             
         finally:

@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  crawl-data:
+    build: .
+    container_name: crawl-data-api
+    ports:
+      - "7000:7000"
+    environment:
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - API_KEY=your-secret-key-here   # ← đổi thành key thật trước khi deploy
+    restart: unless-stopped

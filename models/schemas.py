@@ -141,3 +141,43 @@ class AnalyzeProductResponse(BaseModel):
     is_product: bool = False
     product_info: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
+
+
+# ============== CONTENT WRITE (4-FACTOR PIPELINE) ==============
+
+class ContentWriteRequest(BaseModel):
+    url: str = Field(..., description="URL website khach hang de cao noi dung")
+    keyword: str = Field(..., description="Tu khoa SEO khach hang muon len top")
+    backlink_type: str = Field(
+        ...,
+        description="Loai dich vu backlink: social | blog20"
+    )
+    language: str = Field(
+        ...,
+        description="Ngon ngu bai viet: vi | en | ja | ko | zh | th"
+    )
+    word_count: int = Field(..., description="So tu bai viet muc tieu")
+    text_length: int = Field(..., description="[blog20] Gioi han ky tu noi dung")
+    text_link: str = Field("", description="[blog20] Anchor text de chen link <a href>")
+    total_image: int = Field(2, description="[blog20] So luong anh chen vao bai (default: 2)")
+    tag_image: str = Field(
+        "<img src='https://via.placeholder.com/800x400' alt='image'>",
+        description="[blog20] HTML tag anh mau"
+    )
+    ai_base_url: str = Field("https://content.scapbot.net/v1")
+    ai_model: str = Field("default")
+    ai_api_key: str = Field("d3f230c4fb86d327b79d18790e0d91df")
+
+
+class ContentWriteResponse(BaseModel):
+    status: str = "success"
+    keyword: str = ""
+    language: str = ""
+    backlink_type: str = ""
+    domain: str = ""
+    pages_crawled: int = 0
+    word_count: int = 0
+    processing_time_seconds: float = 0.0   # Thời gian xử lý từ lúc nhận request tới lúc trả response
+    title: str = ""      # Title riêng (social, blog20, likepion)
+    article: str = ""    # Nội dung chính
+    error: Optional[str] = None

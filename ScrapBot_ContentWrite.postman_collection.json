@@ -1,0 +1,144 @@
+{
+    "info": {
+        "name": "ScrapBot API — Content Write 4-Factor",
+        "_postman_id": "scrapbot-content-write-v1",
+        "description": "Test collection cho POST /api/content-write — pipeline 4 yếu tố: keyword + URL + backlink type + language",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "✅ Health Check",
+            "request": {
+                "method": "GET",
+                "url": "http://localhost:8000/health",
+                "description": "Kiểm tra server đang chạy"
+            }
+        },
+        {
+            "name": "📝 Content Write — Guest Post (Tiếng Việt)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:8000/api/content-write",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"url\": \"https://gowell.vn\",\n  \"keyword\": \"sofa nhập khẩu cao cấp\",\n  \"backlink_type\": \"guest_post\",\n  \"language\": \"vi\",\n  \"max_pages\": 5,\n  \"word_count\": 800\n}"
+                },
+                "description": "Guest post tiếng Việt — cào gowell.vn + keyword sofa nhập khẩu"
+            }
+        },
+        {
+            "name": "📝 Content Write — Forum Post (Tiếng Việt)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:8000/api/content-write",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"url\": \"https://gowell.vn\",\n  \"keyword\": \"sofa nhập khẩu cao cấp\",\n  \"backlink_type\": \"forum_post\",\n  \"language\": \"vi\",\n  \"max_pages\": 3,\n  \"word_count\": 400\n}"
+                },
+                "description": "Forum post ngắn, giọng thân mật"
+            }
+        },
+        {
+            "name": "📝 Content Write — Guest Post (English)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:8000/api/content-write",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"url\": \"https://gowell.vn\",\n  \"keyword\": \"premium imported sofa vietnam\",\n  \"backlink_type\": \"guest_post\",\n  \"language\": \"en\",\n  \"max_pages\": 5,\n  \"word_count\": 800\n}"
+                },
+                "description": "Guest post viết bằng tiếng Anh"
+            }
+        },
+        {
+            "name": "📝 Content Write — Web 2.0",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:8000/api/content-write",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"url\": \"https://gowell.vn\",\n  \"keyword\": \"sofa nhập khẩu cao cấp\",\n  \"backlink_type\": \"web2\",\n  \"language\": \"vi\",\n  \"max_pages\": 3,\n  \"word_count\": 600\n}"
+                },
+                "description": "Bài Web 2.0 (Blogger/WordPress/Medium style)"
+            }
+        },
+        {
+            "name": "📝 Content Write — PBN",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:8000/api/content-write",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"url\": \"https://gowell.vn\",\n  \"keyword\": \"sofa da thật nhập khẩu\",\n  \"backlink_type\": \"pbn\",\n  \"language\": \"vi\",\n  \"max_pages\": 5,\n  \"word_count\": 700\n}"
+                },
+                "description": "Bài PBN chất lượng cao, khó phát hiện"
+            }
+        },
+        {
+            "name": "📝 Content Write — Directory",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:8000/api/content-write",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"url\": \"https://gowell.vn\",\n  \"keyword\": \"nội thất nhập khẩu cao cấp\",\n  \"backlink_type\": \"directory\",\n  \"language\": \"vi\",\n  \"max_pages\": 3,\n  \"word_count\": 200\n}"
+                },
+                "description": "Mô tả ngắn cho Business Directory"
+            }
+        },
+        {
+            "name": "📝 Content Write — Tier 2",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:8000/api/content-write",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"url\": \"https://gowell.vn\",\n  \"keyword\": \"sofa cao cấp tphcm\",\n  \"backlink_type\": \"tier2\",\n  \"language\": \"vi\",\n  \"max_pages\": 3,\n  \"word_count\": 400\n}"
+                },
+                "description": "Bài Tier 2 ngắn hỗ trợ Tier 1"
+            }
+        }
+    ]
+}

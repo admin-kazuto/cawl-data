@@ -11,26 +11,34 @@ Chạy:
 Docs: http://localhost:8000/docs
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
 import sys
 
+# Force UTF-8 encoding on Windows (tranh loi charmap khi print tieng Viet)
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 # Ensure core modules are importable
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from core.auth import verify_api_key
 from routes.scrape import router as scrape_router
 from routes.multi_scrape import router as multi_scrape_router
 from routes.pipeline import router as pipeline_router
+from routes.content_write import router as content_write_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 ScrapBot API starting...")
-    print("📖 API docs: http://localhost:8000/docs")
+    print("[ScrapBot] API starting...")
+    print("[ScrapBot] Docs: http://localhost:8000/docs")
     yield
-    print("👋 ScrapBot API shutting down")
+    print("[ScrapBot] API shutting down")
 
 
 app = FastAPI(
@@ -47,6 +55,7 @@ Tool cào data và tạo bài viết tự động.
 - **POST /api/generate-article** — Tạo bài viết marketing
 - **POST /api/pipeline** — Full pipeline (cào → classify → viết bài)
 - **GET /api/pipeline/{job_id}** — Kiểm tra trạng thái pipeline
+- **POST /api/content-write** — 4-factor pipeline (keyword + URL + backlink type + language → bài viết)
     """,
     version="1.0.0",
     lifespan=lifespan
@@ -61,10 +70,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount routes
-app.include_router(scrape_router, prefix="/api", tags=["Scraping"])
-app.include_router(multi_scrape_router, prefix="/api", tags=["AI Processing"])
-app.include_router(pipeline_router, prefix="/api", tags=["Pipeline"])
+# Mount routes — tất cả /api/* yêu cầu X-API-Key
+_auth = [Depends(verify_api_key)]
+app.include_router(scrape_router, prefix="/api", tags=["Scraping"], dependencies=_auth)
+app.include_router(multi_scrape_router, prefix="/api", tags=["AI Processing"], dependencies=_auth)
+app.include_router(pipeline_router, prefix="/api", tags=["Pipeline"], dependencies=_auth)
+app.include_router(content_write_router, prefix="/api", tags=["Content Write"], dependencies=_auth)
 
 
 @app.get("/")

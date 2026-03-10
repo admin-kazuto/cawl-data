@@ -262,11 +262,11 @@ class AIContentExtractor:
         )
         
         if "scapbot" in self.base_url:
-            print(f"🤖 AI: ScapBot Content Hub (workers={self.max_workers})")
+            print(f" AI: ScapBot Content Hub (workers={self.max_workers})")
         elif "localhost" in self.base_url:
-            print(f"🤖 AI: Local LM Studio. Model: {self.model}, URL: {self.base_url}")
+            print(f" AI: Local LM Studio. Model: {self.model}, URL: {self.base_url}")
         else:
-            print(f"🤖 AI: {self.base_url} (model={self.model})")
+            print(f" AI: {self.base_url} (model={self.model})")
 
     def extract(self, pages_data: List[Dict]) -> BusinessInfo:
         """
@@ -281,7 +281,7 @@ class AIContentExtractor:
         Trích xuất thông tin doanh nghiệp bằng AI (OpenAI/LM Studio)
         Gửi toàn bộ nội dung trang cho AI phân tích
         """
-        print("\n🤖 Đang phân tích nội dung bằng AI...")
+        print("\n Đang phân tích nội dung bằng AI...")
         
         # Ghép nội dung các trang thành 1 block text
         combined_content = ""
@@ -327,7 +327,7 @@ class AIContentExtractor:
                 raw_evidence=data.get('evidence', {})
             )
         except Exception as e:
-            print(f"⚠️ AI extraction failed: {e}. Fallback sang Rule-based.")
+            print(f" AI extraction failed: {e}. Fallback sang Rule-based.")
             return self.extract_with_rules(pages_data)
 
     def extract_with_rules(self, pages_data: List[Dict]) -> BusinessInfo:
@@ -335,7 +335,7 @@ class AIContentExtractor:
         Trích xuất thông tin bằng rule-based (không cần AI)
         PHƯƠNG PHÁP MỚI: Tìm heading → lấy nội dung tiếp theo
         """
-        print("\n📋 Đang phân tích nội dung bằng Smart Rules...")
+        print("\n Đang phân tích nội dung bằng Smart Rules...")
         
         # ========== ĐỊNH NGHĨA PATTERNS ==========
         HEADING_PATTERNS = {
@@ -509,7 +509,7 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
     def _classify_one_batch(self, batch_start: int, batch: List[Dict], batch_num: int, total_batches: int) -> List[Dict]:
         """Classify 1 batch — chạy trong thread riêng"""
         import re
-        print(f"    🧠 Batch {batch_num}/{total_batches}: Phân loại {len(batch)} trang...")
+        print(f"     Batch {batch_num}/{total_batches}: Phân loại {len(batch)} trang...")
         
         prompt = self._build_batch_prompt(batch)
         
@@ -547,11 +547,11 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
                 entry['idx'] = global_idx
                 results.append(entry)
             
-            print(f"    ✅ Batch {batch_num}: {len(results)} kết quả")
+            print(f"     Batch {batch_num}: {len(results)} kết quả")
             return results
                 
         except Exception as e:
-            print(f"    ⚠️ Batch {batch_num} classify error: {e}")
+            print(f"     Batch {batch_num} classify error: {e}")
             # Fallback: đánh dấu toàn bộ batch là OTHER
             return [{
                 "idx": batch_start + i,
@@ -584,7 +584,7 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
             batch_num = batch_start // BATCH_SIZE + 1
             batches.append((batch_start, batch, batch_num, total_batches))
         
-        print(f"    📡 {total_batches} batches x {BATCH_SIZE} trang, {self.max_workers} threads song song")
+        print(f"     {total_batches} batches x {BATCH_SIZE} trang, {self.max_workers} threads song song")
         start_time = time.time()
         
         all_results = []
@@ -602,10 +602,10 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
                     results = future.result()
                     all_results.extend(results)
                 except Exception as e:
-                    print(f"    ❌ Batch {batch_num} thread error: {e}")
+                    print(f"     Batch {batch_num} thread error: {e}")
         
         elapsed = time.time() - start_time
-        print(f"    ⏱️ Classify xong {len(all_results)}/{len(pages_metadata)} trang trong {elapsed:.1f}s")
+        print(f"    ⏱ Classify xong {len(all_results)}/{len(pages_metadata)} trang trong {elapsed:.1f}s")
         
         return all_results
 
@@ -639,11 +639,11 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
                 try:
                     return json.loads(content)
                 except:
-                    # print(f"⚠️ [JSON ERROR] Raw: {content[:50]}...") # In ra để debug
+                    # print(f" [JSON ERROR] Raw: {content[:50]}...") # In ra để debug
                     return None
             
         except Exception as e:
-            # print(f"⚠️ Lỗi phân tích sản phẩm (Debug): {e}") # Có thể bật để debug sâu
+            # print(f" Lỗi phân tích sản phẩm (Debug): {e}") # Có thể bật để debug sâu
             return None
 
     def create_article(self, product_info: Dict, source_content: str = "", product_images: list = None) -> str:
@@ -678,7 +678,7 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
         )
 
         try:
-            print(f"✍️  Đang viết bài cho sản phẩm: {product_info.get('product_name')}...")
+            print(f"  Đang viết bài cho sản phẩm: {product_info.get('product_name')}...")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -844,7 +844,7 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
         )
         
         try:
-            print(f"🎬 Đang tạo kịch bản Media cho: {p_name}...")
+            print(f" Đang tạo kịch bản Media cho: {p_name}...")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -868,7 +868,7 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
             return self._sanitize_media_prompts(raw_prompts, p_name)
                 
         except Exception as e:
-            print(f"⚠️ Lỗi tạo media prompts: {e}")
+            print(f" Lỗi tạo media prompts: {e}")
             return {
                 "image_prompt": f"[{p_name}], [Modern studio environment], [Cinematic Lighting with soft shadows and highlights], [Photorealistic, high detail], [8k resolution]",
                 "video_shot_1": f"Video Shot 1 (0s-8s): Product showcase intro. Slow motion close-up of {p_name}, highlighting its design and key features.",
@@ -896,7 +896,7 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
         )
 
         try:
-            print(f"🎙️  Đang tạo TTS script cho: {p_name}...")
+            print(f"  Đang tạo TTS script cho: {p_name}...")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -954,7 +954,7 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
         )
 
         try:
-            print(f"📝 Đang tạo Likepion bio cho: {p_name}...")
+            print(f" Đang tạo Likepion bio cho: {p_name}...")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -970,6 +970,333 @@ CHỈ TRẢ VỀ JSON ARRAY, KHÔNG viết gì thêm.
             return bio
         except Exception as e:
             return f"Lỗi tạo Likepion bio: {e}"
+
+
+    # ===================== BACKLINK CONTENT WRITE (4-FACTOR) =====================
+
+    # Prompt template riêng cho từng loại backlink
+    # [[AI_TOPIC]] = data cào được từ URL (đã được gộp và lọc sạch)
+    # {keyword} = từ khóa người dùng nhập
+    # {word_count} = số từ mục tiêu
+    BACKLINK_PROMPTS = {
+        # [[AI_TOPIC]]    = data cào từ URL đã lọc sạch
+        # [[LANG_FOR_AI]] = tên ngôn ngữ đầy đủ (Vietnamese, English...)
+        # {keyword}       = từ khóa người dùng nhập
+        # {word_count}    = số từ mục tiêu
+
+        # --- LIKEPION ---
+        "likepion": """[CHUA CO PROMPT - can bo sung]""",
+        "likepion_title": """[CHUA CO PROMPT TITLE - can bo sung]""",
+
+        # --- SOCIAL ---
+        # Title cho social post
+        "social_title": """Write a title social post in a professional tone about: [[AI_TOPIC]]. You write in [[LANG_FOR_AI]] language. Please write only one title and do not include the expanded content of that title. Titles do not include numbers at the beginning.""",
+        # Content cho social post
+        "social": """Write a 500+ character social post in a professional tone about: [[AI_TOPIC]]. You write in [[LANG_FOR_AI]] language. You do not need to write any contact details or sample content. You can use up to 5 emojis. Do not include an introductory statement like 'Here is; Hello; Welcome to; Article about'. Focus just on providing the requested content.""",
+
+        # --- BLOG 2.0 ---
+        "blog20_title": """You are a specialized title-generation expert for the [[TOPIC]] industry, with a deep understanding of E-E-A-T and click-through rate optimization. Your sole function is to generate 1 [[LANGUAGE_AI]] title for an article to be published on [[URL_AI]], using the keywords in [[KEYWORD]]. The following mandatory directives must be followed without exception: 1. Creative Variation Mandate (CRITICAL): To ensure every generated title is unique in both form and substance, you must systematically vary the creative angle. For each execution, choose a different archetype from the list below. Do not reuse the same archetype or a similar phrasing style consecutively. This variation is non-negotiable. Benefit-Oriented: Focus on the value or positive outcome for the reader. Problem/Solution: Address a common pain point and present the content as the solution. Intrigue/Curiosity: Pose a compelling question or statement that sparks curiosity without being clickbait. Direct Guide/How-To: Clearly state that the content is an instructional or definitive guide. Authoritative Statement: Present a definitive or expert take. 2. Content Quality: The title must be 50-70 characters long (max 120 characters), naturally integrate the [[KEYWORD]], be highly engaging, and professional. Do not use punctuation like "!" or "?". 3. Forbidden Content: You must not generate generic placeholder titles. The use of terms like "Untitled", "No Title", or their equivalent translations is strictly forbidden. The title must always be meaningful. 4. Mandatory Output Directive: You MUST generate a meaningful title that fulfills all other directives. Failure to produce a valid output is not an option. 5. Final Output Format: Your entire response must be a single, valid JSON object and nothing else. There must be no text, explanations, or markdown fences. The JSON object must contain a single key: "title". Example of correct format: {"title": "This Is A Correctly Formatted Sample Title"}""",
+        "blog20": """You are a world-class SEO article writing expert in the [[KEYWORD]] industry with a deep understanding of E-E-A-T. Your task is to write a unique and high-quality article to be published on the website [[URL_AI]], using the keywords from [[KEYWORD]]. The article MUST be informed by the following crawled and filtered website data of the client: [[TOPIC]]. Use this data to ensure the content reflects the client's actual products, services, and brand — do NOT write generic content. You must strictly adhere to the following instructions: Mandatory Uniqueness and Anti-Repetition Protocol (CRITICAL): This is the most important directive. Vary the Core Angle and Rhetorical Approach for every execution. Language: [[LANGUAGE_AI]]. Language Purity Protocol (CRITICAL): The entire article must be written exclusively in [[LANGUAGE_AI]]. Absolutely no words or phrases from other languages are permitted. Length (MANDATORY RANGE): The article MUST be between [[MIN_LENGTH]] and [[TEXT_LENGTH]] characters. This range is strict — writing less than [[MIN_LENGTH]] characters is a failure. You MUST write enough to reach the minimum. Structure: Begin with a compelling introductory paragraph. Develop content using AIDA, PAS, 4Ps, or FAB framework logic (do not label the framework). Tone: Professional, fluent, coherent. Forbidden Words: Never use: conclusion, summary, finally, in the end, overall, ultimately. HTML Formatting: Every paragraph must be enclosed in <p></p> tags. No bullet points, numbered lists, or <br> tags. Headings: Use <h2> and <h3> HTML tags in sentence case. No colon in headings. First heading must be <h2>. Last heading must be <h3>. Final paragraph has no heading. Links (STRICT): Exactly 2 hyperlinks total. First: <a href="[[URL_AI]]">[[TEXT_LINK_AI]]</a> naturally in first paragraph. Second: <a href="[[URL_AI]]">[[URL_AI]]</a> naturally in latter half, not in final paragraph. Images: Insert [[TOTAL_IMAGE_EN]] ([[TOTAL_IMAGE]]) [[TAG_IMAGE_AI]] tags at varied positions, NOT inside <p> tags and NOT in the final paragraph. Output: Wrap everything in a single <article> tag. No intro phrases like 'Here is...' or 'Certainly...'.""",
+    }
+
+    # Map language code → full name dùng cho [[LANG_FOR_AI]]
+    LANGUAGE_NAMES = {
+        "vi": "Vietnamese",
+        "en": "English",
+        "ja": "Japanese",
+        "ko": "Korean",
+        "zh": "Chinese",
+        "th": "Thai",
+        "fr": "French",
+        "de": "German",
+        "es": "Spanish",
+        "id": "Indonesian",
+    }
+
+    LANGUAGE_INSTRUCTIONS = {
+        "vi": "QUAN TRONG: Toan bo bai viet PHAI bang TIENG VIET chuan, khong lan tieng Anh hay ngon ngu khac.",
+        "en": "IMPORTANT: Write the ENTIRE article in ENGLISH only. Professional and fluent.",
+        "ja": "Write the entire article in Japanese only. Natural and fluent.",
+        "ko": "Write the entire article in Korean only. Natural and fluent.",
+        "zh": "Write the entire article in Chinese only. Natural and fluent.",
+        "th": "Write the entire article in Thai only. Natural and fluent.",
+    }
+
+    def generate_title_only(
+        self,
+        keyword: str,
+        ai_topic: str,
+        backlink_type: str = "social",
+        language: str = "vi",
+        url: str = "",
+    ) -> str:
+        """
+        Sinh title riêng — dùng để chạy song song với crawl.
+        Returns: title string
+        """
+        bl_type = backlink_type.lower().strip()
+        lang_code = language.lower().strip()
+        lang_full_name = self.LANGUAGE_NAMES.get(lang_code, language.capitalize())
+        title_key = f"{bl_type}_title"
+
+        if title_key not in self.BACKLINK_PROMPTS:
+            return ""
+
+        p = self.BACKLINK_PROMPTS[title_key]
+        p = p.replace("[[AI_TOPIC]]", ai_topic)
+        p = p.replace("[[LANG_FOR_AI]]", lang_full_name)
+        p = p.replace("[[TOPIC]]", ai_topic[:300])
+        p = p.replace("[[LANGUAGE_AI]]", lang_full_name)
+        p = p.replace("[[URL_AI]]", url)
+        p = p.replace("[[KEYWORD]]", keyword)
+
+        try:
+            raw = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "Output only the title as instructed."},
+                    {"role": "user", "content": f"{p}\nKEYWORD: {keyword}\nOutput ONLY the title. One single line. No explanation."},
+                ],
+                temperature=0.7,
+                max_tokens=150,
+            ).choices[0].message.content.strip()
+
+            # blog20 trả về JSON {"title": "..."}
+            if bl_type == "blog20":
+                import json as _json
+                try:
+                    return _json.loads(raw).get("title", raw)[:120]
+                except Exception:
+                    return raw.strip('"').strip()[:120]
+            return raw
+        except Exception as e:
+            return ""
+
+    def generate_content_only(
+        self,
+        keyword: str,
+        ai_topic: str,
+        backlink_type: str = "social",
+        language: str = "vi",
+        word_count: int = 800,
+        url: str = "",
+        text_link: str = "",
+        total_image: int = 2,
+        tag_image: str = "",
+        text_length: int = 5000,
+    ) -> str:
+        """
+        Sinh content riêng — nhận ai_topic đã có cấu trúc từ content_write.py.
+        Có retry tự động nếu blog20 trả về bài quá ngắn.
+        Returns: article string
+        """
+        bl_type = backlink_type.lower().strip()
+        lang_code = language.lower().strip()
+        lang_full_name = self.LANGUAGE_NAMES.get(lang_code, language.capitalize())
+
+        NUM_TO_WORDS = {1:"one",2:"two",3:"three",4:"four",5:"five",
+                        6:"six",7:"seven",8:"eight",9:"nine",10:"ten"}
+        total_image_en = NUM_TO_WORDS.get(total_image, str(total_image))
+        text_link_val = text_link or keyword
+        min_length = int(text_length * 0.85)
+
+        def build_prompt(key: str) -> str:
+            p = self.BACKLINK_PROMPTS.get(key, "")
+            p = p.replace("[[AI_TOPIC]]", ai_topic)      # legacy alias
+            p = p.replace("[[TOPIC]]", ai_topic)          # full crawled + filtered data
+            p = p.replace("[[LANG_FOR_AI]]", lang_full_name)
+            p = p.replace("[[LANGUAGE_AI]]", lang_full_name)
+            p = p.replace("[[URL_AI]]", url)
+            p = p.replace("[[KEYWORD]]", keyword)
+            p = p.replace("[[TEXT_LENGTH]]", str(text_length))
+            p = p.replace("[[MIN_LENGTH]]", str(min_length))
+            p = p.replace("[[TAG_IMAGE_AI]]", tag_image)
+            p = p.replace("[[TOTAL_IMAGE]]", str(total_image))
+            p = p.replace("[[TOTAL_IMAGE_EN]]", total_image_en)
+            p = p.replace("[[TEXT_LINK_AI]]", text_link_val)
+            try:
+                p = p.format(keyword=keyword, word_count=word_count)
+            except Exception:
+                pass
+            return p
+
+        if bl_type not in self.BACKLINK_PROMPTS:
+            return f"Loi viet bai: backlink_type '{bl_type}' chua co prompt."
+
+        content_sys = build_prompt(bl_type)
+
+        try:
+            print(f"  Dang viet [{bl_type}] keyword='{keyword}' lang='{lang_full_name}'...")
+
+            def call_ai(system: str, max_tok: int = 3000) -> str:
+                return self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": f"KEYWORD: {keyword}\nWrite the content now."},
+                    ],
+                    temperature=0.7,
+                    max_tokens=max_tok,
+                ).choices[0].message.content.strip()
+
+            article = call_ai(content_sys)
+            article = self._deduplicate_article(article)
+            if lang_code == "vi":
+                article = self._fix_language_artifacts(article)
+
+            # ── RETRY nếu blog20 quá ngắn ──────────────────────────────────
+            if bl_type == "blog20":
+                for retry in range(2):
+                    if len(article) >= int(text_length * 0.80):
+                        break
+                    print(f"  [blog20] Bai qua ngan ({len(article)} chars < {int(text_length*0.80)}), retry {retry+1}...")
+                    retry_sys = (
+                        content_sys
+                        + f"\n\nCRITICAL: The previous attempt was too short. "
+                        f"You MUST write at least {min_length} characters this time. "
+                        f"Expand all sections with more detail and depth."
+                    )
+                    article = call_ai(retry_sys)
+                    article = self._deduplicate_article(article)
+                    if lang_code == "vi":
+                        article = self._fix_language_artifacts(article)
+
+            return article
+
+        except Exception as e:
+            return f"Loi viet bai: {e}"
+
+    def write_backlink_content(
+        self,
+        keyword: str,
+        crawled_content: str,
+        backlink_type: str = "likepion",
+        language: str = "vi",
+        word_count: int = 800,
+        # Blog20 extra params
+        url: str = "",
+        text_link: str = "",
+        total_image: int = 2,
+        tag_image: str = "",
+        text_length: int = 5000,
+    ) -> tuple:
+        """
+        Viết bài backlink dựa trên 4 yếu tố:
+        1. keyword    — từ khóa SEO KH muốn lên top
+        2. crawled_content — nội dung cào từ website KH
+        3. backlink_type  — loại dịch vụ backlink
+        4. language       — ngôn ngữ bài viết
+
+        Returns: tuple (title: str, article: str)
+        """
+        bl_type = backlink_type.lower().strip()
+        lang_code = language.lower().strip()
+        lang_full_name = self.LANGUAGE_NAMES.get(lang_code, language.capitalize())
+
+        # Helper: build 1 prompt (replace tat ca bien)
+        NUM_TO_WORDS = {1:"one",2:"two",3:"three",4:"four",5:"five",
+                        6:"six",7:"seven",8:"eight",9:"nine",10:"ten"}
+        total_image_en = NUM_TO_WORDS.get(total_image, str(total_image))
+        text_link_val = text_link or keyword  # fallback to keyword neu khong co
+
+        def build_prompt(key: str) -> str:
+            p = self.BACKLINK_PROMPTS.get(key, "")
+            # Common variables
+            p = p.replace("[[AI_TOPIC]]", ai_topic)
+            p = p.replace("[[LANG_FOR_AI]]", lang_full_name)
+            # Blog20 specific variables
+            p = p.replace("[[TOPIC]]", ai_topic)
+            p = p.replace("[[LANGUAGE_AI]]", lang_full_name)
+            p = p.replace("[[URL_AI]]", url)
+            p = p.replace("[[KEYWORD]]", keyword)
+            p = p.replace("[[TEXT_LENGTH]]", str(text_length))
+            p = p.replace("[[TAG_IMAGE_AI]]", tag_image)
+            p = p.replace("[[TOTAL_IMAGE]]", str(total_image))
+            p = p.replace("[[TOTAL_IMAGE_EN]]", total_image_en)
+            p = p.replace("[[TEXT_LINK_AI]]", text_link_val)
+            # Python format placeholders (safe)
+            try:
+                p = p.format(keyword=keyword, word_count=word_count)
+            except Exception:
+                pass
+            return p
+
+        # Helper: gọi AI 1 lần
+        def call_ai(system: str, user: str, max_tok: int = 3000) -> str:
+            resp = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                temperature=0.7,
+                max_tokens=max_tok,
+            )
+            return resp.choices[0].message.content.strip()
+
+        # Giới hạn [[AI_TOPIC]] theo loại —
+        # title-only types chỉ cần ~500 ký tự đầu
+        TITLE_ONLY_TYPES = {"likepion"}
+        SHORT_TOPIC_TYPES = {"likepion", "social", "blog20"}
+
+        if bl_type in SHORT_TOPIC_TYPES:
+            ai_topic = crawled_content[:800].strip()
+        else:
+            ai_topic = crawled_content[:20000] + "..." if len(crawled_content) > 20000 else crawled_content
+
+        title_key = f"{bl_type}_title"
+        has_title_prompt = title_key in self.BACKLINK_PROMPTS
+
+        print(f"  Dang viet [{bl_type}] keyword='{keyword}' lang='{lang_full_name}'...")
+
+        try:
+            # ── TITLE ──────────────────────────────────────────────────────────
+            title_str = ""
+            if has_title_prompt:
+                title_sys = build_prompt(title_key)
+                raw_title = call_ai(
+                    system=title_sys,
+                    user=f"KEYWORD: {keyword}\nOutput ONLY the title. One single line. No explanation. No numbering.",
+                    max_tok=150,
+                )
+                # blog20 title tra ve JSON {"title": "..."} → parse ra
+                if bl_type == "blog20":
+                    import json as _json
+                    try:
+                        parsed = _json.loads(raw_title)
+                        title_str = parsed.get("title", raw_title)[:120]
+                    except Exception:
+                        # Neu khong parse duoc JSON, lay nguyen chuoi
+                        title_str = raw_title.strip('"').strip()[:120]
+                else:
+                    title_str = raw_title
+
+            # ── CONTENT ────────────────────────────────────────────────────────
+            content_str = ""
+            if bl_type not in TITLE_ONLY_TYPES:
+                content_sys = build_prompt(bl_type)
+                content_str = call_ai(
+                    system=content_sys,
+                    user=f"KEYWORD: {keyword}\nWrite the content now.",
+                    max_tok=3000,
+                )
+                content_str = self._deduplicate_article(content_str)
+                if lang_code == "vi":
+                    content_str = self._fix_language_artifacts(content_str)
+            else:
+                # likepion: chỉ có title, không có content
+                if not title_str:
+                    content_sys = build_prompt(bl_type)
+                    title_str = call_ai(
+                        system=content_sys,
+                        user=f"KEYWORD: {keyword}\nOutput ONLY the title. One single line.",
+                        max_tok=80,
+                    )
+
+            return title_str, content_str
+
+        except Exception as e:
+            return "", f"Loi viet bai: {e}"
 
 
 # ============================================================================
@@ -1058,7 +1385,7 @@ class VivibeTTSClient:
 
         if "result" in result and "url" in result["result"]:
             credits = result["result"].get("creditsRemaining", "?")
-            print(f"   🔊 Audio OK — Credits còn: {credits}")
+            print(f"    Audio OK — Credits còn: {credits}")
             return result["result"]["url"]
         else:
             raise Exception(f"TTS Error: {result}")
@@ -1084,7 +1411,7 @@ class VivibeTTSClient:
             with open(output_path, 'wb') as f:
                 f.write(resp.content)
             size_kb = len(resp.content) / 1024
-            print(f"   💾 Đã lưu: {output_path} ({size_kb:.0f} KB)")
+            print(f"    Đã lưu: {output_path} ({size_kb:.0f} KB)")
             return output_path
         else:
             raise Exception(f"Download Error: {resp.status_code}")
@@ -1110,7 +1437,7 @@ class VivibeTTSClient:
         try:
             from pydub import AudioSegment
         except ImportError:
-            print("⚠️ Cần cài pydub: pip install pydub (và ffmpeg)")
+            print(" Cần cài pydub: pip install pydub (và ffmpeg)")
             # Fallback: gửi toàn bộ text 1 lần
             return self.generate_and_download(text, output_path, voice_key, speed)
 
@@ -1121,13 +1448,13 @@ class VivibeTTSClient:
         if not sentences:
             return self.generate_and_download(text, output_path, voice_key, speed)
 
-        print(f"   ✂️ Chia thành {len(sentences)} câu...")
+        print(f"    Chia thành {len(sentences)} câu...")
 
         combined = AudioSegment.empty()
         temp_files = []
 
         for i, sentence in enumerate(sentences):
-            print(f"   🎙️  [{i+1}/{len(sentences)}] {sentence[:50]}...")
+            print(f"     [{i+1}/{len(sentences)}] {sentence[:50]}...")
             try:
                 url = self.generate_tts(sentence, voice_key, speed)
                 resp = requests.get(url, timeout=60)
@@ -1144,7 +1471,7 @@ class VivibeTTSClient:
                     combined += AudioSegment.silent(duration=pause_ms)
 
             except Exception as e:
-                print(f"   ⚠️ Block {i+1} lỗi: {e}")
+                print(f"    Block {i+1} lỗi: {e}")
 
         # Export
         fmt = "mp3" if output_path.lower().endswith(".mp3") else "wav"
@@ -1152,7 +1479,7 @@ class VivibeTTSClient:
 
         dur = len(combined) / 1000
         m, s = int(dur // 60), int(dur % 60)
-        print(f"   ✅ Merged → {output_path} ({m}:{s:02d})")
+        print(f"    Merged → {output_path} ({m}:{s:02d})")
 
         # Cleanup temp
         for p in temp_files:
@@ -1221,7 +1548,7 @@ def save_result_to_file(info: BusinessInfo, filepath: str):
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(data, ensure_ascii=False, indent=2, fp=f)
     
-    print(f"💾 Đã lưu kết quả vào: {filepath}")
+    print(f" Đã lưu kết quả vào: {filepath}")
 
 
 if __name__ == "__main__":
